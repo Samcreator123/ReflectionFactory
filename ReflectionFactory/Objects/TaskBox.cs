@@ -7,7 +7,7 @@ namespace ReflectionFactory.Objects
     /// <summary>
     /// 使用該物件能執行不同的任務
     /// </summary>
-    public class CommandBox : ICommandBox
+    public class TaskBox : ITaskBox
     {
         private readonly Dictionary<string,ITask> _taskers = new Dictionary<string,ITask>();
         
@@ -21,16 +21,19 @@ namespace ReflectionFactory.Objects
             try
             {
                 // 挑選有該屬性的工廠
-                var factorys = assembly.GetTypes()
-                                .Where(factory => factory.GetCustomAttributes<TaskFactoryAttribute>().Count() > 0);
+                //IEnumerable<Type> factorys = assembly.GetTypes()
+                //                .Where(factory => factory.GetCustomAttributes<TaskFactoryAttribute>().Count() > 0);
 
-                foreach (var factory in factorys)
+                IEnumerable<Type> factories = assembly.GetTypes()
+                        .Where(factory => typeof(ITaskFactory).IsAssignableFrom(factory));
+
+                foreach (var factory in factories)
                 {
                     Type factoryType = assembly.GetType(factory.FullName);
 
-                    ICommandFactory factoryObj = Activator.CreateInstance(factoryType) as ICommandFactory;
+                    ITaskFactory factoryObj = Activator.CreateInstance(factoryType) as ITaskFactory;
 
-                    string taskCode = factoryType.GetCustomAttribute<TaskFactoryAttribute>().Code;
+                    string taskCode = factoryObj.Code;
 
                     // 生產任務
                     ITask task = factoryObj.GetTask();
